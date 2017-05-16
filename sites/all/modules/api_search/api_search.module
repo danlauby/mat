@@ -78,7 +78,7 @@ $doctor = curl_init();
 // Set curl options
 curl_setopt_array($doctor, array(
     CURLOPT_RETURNTRANSFER => 1,
-    CURLOPT_URL => 'https://api.betterdoctor.com/2016-03-01/doctors?query=anxiety&location=' . $user_location . '&user_location=37.773%2C-122.413&skip=0&limit=10&user_key=',
+    CURLOPT_URL => 'https://api.betterdoctor.com/2016-03-01/doctors?query=anxiety&location=' . $user_location . '&skip=0&limit=3&user_key=',
     CURLOPT_USERAGENT => 'Something'
 ));
     // Execute curl
@@ -110,14 +110,30 @@ function search_results() {
     for($i = 0; $i < sizeof($search_results); $i++) {
          echo $search_results[$i]["Title"] . "<br>";
     }
-    for($j = 0; $j < sizeof($doctor_answer); $j++) {
-         echo $doctor_answer[$j]['profile']['first_name'];
-         echo ' <img src="' . $doctor_answer[$j]['profile']['image_url'] . '" alt="No image" />';
+    for ($j = 0; $j < sizeof($doctor_answer); $j++) {
+        $doctor_profile = [];
+        array_push($doctor_profile, $doctor_answer[$j]);
+        for ($k = 0; $k < sizeof($doctor_profile); $k++) {
+            $doctor = [];
+            $firstName = $doctor_profile[$k]['profile']['first_name'];
+            $lastName = $doctor_profile[$k]['profile']['last_name'];
+            $doctorImg = $doctor_profile[$k]['profile']['image_url'];
+            $doctorBio = $doctor_profile[$k]['profile']['bio'];
+            array_push($doctor, $firstName, $lastName, $doctorImg, $doctorBio);
+        }
+        for ($x = 0; $x < sizeof($doctor); $x++) {
+            echo "<div><h2>" . $doctor[$x] . "</div><br>";
+        }
     }
-//     var_dump($doctor_answer);
-//     echo '<pre>';
-//     var_dump($answer['Result']['Resources']['Resource'][0]['Title']);
-//     echo '</pre>';
-//     exit;
+
+
+    // print_r($doctor_profile[0]);
+    // print_r($doctor_profile[0]['profile']['first_name']);
+    // var_dump($doctor_answer[0]['practices']);
+    // echo '<pre>';
+    // var_dump($answer['Result']['Resources']['Resource'][0]['Title']);
+    // var_dump($search_results[0]["Title"]);
+    // echo '</pre>';
+    // exit;
 //     return $answer;
 }
