@@ -120,4 +120,4 @@ function search_results() {
 //     echo '</pre>';
 //     exit;
 //     return $answer;
-// }
+}
