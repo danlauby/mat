@@ -1,0 +1,5 @@
+name = API Search
+description = Search form using Health Finder & Better Doctor API's
+package = Custom Modules
+core = 7.x
+files[] = api_search.module

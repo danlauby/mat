@@ -1,0 +1,123 @@
+<?php
+
+// Set options
+function api_search_menu() {
+    $items = [];
+    $items['api_search'] = [
+        'title' => 'Search',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => ['api_search_form'],
+        'access callback' => TRUE,
+        'type' => MENU_NORMAL_ITEM,
+    ];
+    $items['search_results'] = [
+        'title' => 'Results',
+        'page callback' => 'search_results',
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK,
+    ];
+    return $items;
+}
+
+// Create form
+function api_search_form() {
+    $form['trigger'] = [
+        '#title' => 'Trigger',
+        '#type' => 'textfield',
+        '#description' => t('What triggers your anxiety?'),
+    ];
+    $form['location'] = [
+        '#title' => 'Location',
+        '#type' => 'textfield',
+        '#description' => t('Where are you located?'),
+    ];
+    $form['resources'] = [
+        '#title' => 'Resources',
+        '#type' => 'textfield',
+        '#description' => t('What resources interest you?'),
+    ];
+    $form['submit'] = [
+        '#type' => 'submit',
+        '#value' => 'Search',
+    ];
+    return $form;
+}
+
+// Submit form
+function api_search_form_submit($form, &$form_state) {
+// Save user input
+$trigger = $form_state['values']['trigger'];
+$user_location = $form_state['values']['location'];
+$resources = $form_state['values']['resources'];
+
+
+// -----Health Finder API ------ //
+
+// Init curl
+$health = curl_init();
+// Set curl options
+curl_setopt_array($health, array(
+    CURLOPT_RETURNTRANSFER => 1,
+    CURLOPT_URL => "https://healthfinder.gov/api/v2/topicsearch.json?api_key=&Keyword=" . $trigger,
+    CURLOPT_USERAGENT => 'myanxietytriggers'
+));
+// Execute curl
+$health_results = curl_exec($health);
+// Throw error if there is no response
+if($health_results === FALSE) {
+    drupal_set_message(t('Error'), 'error');
+}
+// Close curl
+curl_close($health);
+
+
+// ------ Better Doctor API ------ //
+
+// Init curl
+$doctor = curl_init();
+// Set curl options
+curl_setopt_array($doctor, array(
+    CURLOPT_RETURNTRANSFER => 1,
+    CURLOPT_URL => 'https://api.betterdoctor.com/2016-03-01/doctors?query=anxiety&location=' . $user_location . '&user_location=37.773%2C-122.413&skip=0&limit=10&user_key=',
+    CURLOPT_USERAGENT => 'Something'
+));
+    // Execute curl
+    $doctor_results = curl_exec($doctor);
+    // Throw error if there is no response
+    if($doctor_results === FALSE) {
+        drupal_set_message(t('Error'), 'error');
+    }
+    // Close curl
+    curl_close($doctor);
+    // Format JSON
+    $health_array = json_decode($health_results, true);
+    $doctor_array = json_decode($doctor_results, true);
+    // Store user results
+    $_SESSION['health_results'] = $health_array;
+    $_SESSION['doctor_results'] = $doctor_array;
+    // Display result on 'search_results' page
+    $form_state['redirect'] = 'search_results';
+    }
+
+// Display selected items
+function search_results() {
+    $answer = $_SESSION['health_results'];
+    $doctor_answer = $_SESSION['doctor_results'];
+    $doctor_answer = $doctor_answer['data'];
+    // echo sizeof($doctor_answer);
+
+    $search_results = $answer['Result']['Resources']['Resource'];
+    for($i = 0; $i < sizeof($search_results); $i++) {
+         echo $search_results[$i]["Title"] . "<br>";
+    }
+    for($j = 0; $j < sizeof($doctor_answer); $j++) {
+         echo $doctor_answer[$j]['profile']['first_name'];
+         echo ' <img src="' . $doctor_answer[$j]['profile']['image_url'] . '" alt="No image" />';
+    }
+//     var_dump($doctor_answer);
+//     echo '<pre>';
+//     var_dump($answer['Result']['Resources']['Resource'][0]['Title']);
+//     echo '</pre>';
+//     exit;
+//     return $answer;
+// }
