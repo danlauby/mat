@@ -78,8 +78,8 @@ $doctor = curl_init();
 // Set curl options
 curl_setopt_array($doctor, array(
     CURLOPT_RETURNTRANSFER => 1,
-    CURLOPT_URL => 'https://api.betterdoctor.com/2016-03-01/doctors?query=anxiety&location=' . $user_location . '&skip=0&limit=3&user_key=',
-    CURLOPT_USERAGENT => 'Something'
+    CURLOPT_URL => 'https://api.betterdoctor.com/2016-03-01/doctors?query=' . $trigger . '&location=' . $user_location . '&skip=0&limit=10&user_key=',
+    CURLOPT_USERAGENT => 'myanxietytriggers'
 ));
     // Execute curl
     $doctor_results = curl_exec($doctor);
@@ -103,37 +103,31 @@ curl_setopt_array($doctor, array(
 function search_results() {
     $answer = $_SESSION['health_results'];
     $doctor_answer = $_SESSION['doctor_results'];
-    $doctor_answer = $doctor_answer['data'];
-    // echo sizeof($doctor_answer);
 
+    $doctor_display = "";
     $search_results = $answer['Result']['Resources']['Resource'];
     for($i = 0; $i < sizeof($search_results); $i++) {
-         echo $search_results[$i]["Title"] . "<br>";
+      echo "<h3>" . $search_results[$i]["Title"] . "</h3><br>";
     }
-    for ($j = 0; $j < sizeof($doctor_answer); $j++) {
+    for ($j = 0; $j < sizeof($doctor_answer['data']); $j++) {
         $doctor_profile = [];
-        array_push($doctor_profile, $doctor_answer[$j]);
-        for ($k = 0; $k < sizeof($doctor_profile); $k++) {
-            $doctor = [];
-            $firstName = $doctor_profile[$k]['profile']['first_name'];
-            $lastName = $doctor_profile[$k]['profile']['last_name'];
-            $doctorImg = $doctor_profile[$k]['profile']['image_url'];
-            $doctorBio = $doctor_profile[$k]['profile']['bio'];
-            array_push($doctor, $firstName, $lastName, $doctorImg, $doctorBio);
+        array_push($doctor_profile, $doctor_answer['data'][$j]);
+
+        $doctor = [];
+        for ($x = 0; $x < sizeof($doctor_profile); $x++) {
+            $name = $doctor_profile[$x]['profile']['first_name'] . " " . $doctor_profile[$x]['profile']['last_name'];
+            $img = $doctor_profile[$x]['profile']['image_url'];
+            $bio = $doctor_profile[$x]['profile']['bio'];
+            // $website = $doctor_profile[$x]['practices'][$x]['website'];
+            $phone = $doctor_profile[$x]['practices'][$x]['phones'][$x]['number'];
+            $city = $doctor_profile[$x]['practices'][$x]['visit_address']['city'];               $state = $doctor_profile[$x]['practices'][$x]['visit_address']['state'];
+            array_push($doctor, $name, $img, $bio, $phone, $city, $state);
+
         }
-        for ($x = 0; $x < sizeof($doctor); $x++) {
-            echo "<div><h2>" . $doctor[$x] . "</div><br>";
+        for ($z = 0; $z < sizeof($doctor_profile); $z++) {
+            $doctor_display .= "<h2>" . [$name][$z] . "</h2><br><img src='" . [$img][$z] . "'/><br><br>" . [$bio][$z] . "</p>";
         }
     }
-
-
+    return $doctor_display;
     // print_r($doctor_profile[0]);
-    // print_r($doctor_profile[0]['profile']['first_name']);
-    // var_dump($doctor_answer[0]['practices']);
-    // echo '<pre>';
-    // var_dump($answer['Result']['Resources']['Resource'][0]['Title']);
-    // var_dump($search_results[0]["Title"]);
-    // echo '</pre>';
-    // exit;
-//     return $answer;
 }
