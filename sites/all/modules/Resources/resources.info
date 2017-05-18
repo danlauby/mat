@@ -1,0 +1,5 @@
+name = Resources
+description = Resources for anxiety disorders
+package = Custom Modules
+core = 7.x
+files[] = resources.module

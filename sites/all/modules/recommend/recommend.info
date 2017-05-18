@@ -1,0 +1,5 @@
+name = Recommend
+description = User can recommend a Doctor
+package = Custom Modules
+core = 7.x
+files[] = recommend.module

@@ -1,0 +1,87 @@
+<?php
+
+// Set parameters
+function resources_menu() {
+    $items['resources'] = array(
+        'title' => 'Find Additional Resources',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('resources'),
+        'access callback' => TRUE,
+        'type' => MENU_NORMAL_ITEM,
+    );
+    $items['result'] = array(
+        'title' => 'Your Resources',
+        'page callback' => 'result',
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+    return $items;
+}
+
+
+// Create form
+function resources() {
+    $form['trigger'] = array(
+        '#title' => 'What\'s your trigger?',
+        '#type' => 'textfield',
+        // '#required' => TRUE,
+        '#description' => t('Something that causes anxiety'),
+    );
+    $form['location'] = array(
+        '#title' => 'Enter your state',
+        '#type' => 'textfield',
+        // '#required' => TRUE,
+        '#description' => t('Enter the state you wish to find resources'),
+    );
+    $form['submit'] = [
+        '#type' => 'submit',
+        '#value' => 'Search',
+    ];
+    return $form;
+}
+
+// Submit form
+function resources_submit($form, &$form_state) {
+    $_SESSION['trigger'] = $form_state['values']['trigger'];
+    $_SESSION['location'] = $form_state['values']['location'];
+
+    // $xml=simplexml_load_string($res) or die("Error: Cannot create object");
+    // print_r($xml);
+
+    // $p = xml_parser_create();
+    // xml_parse_into_struct($p, $res, $vals, $index);
+    // xml_parser_free($p);
+    // echo "Index array\n";
+    // print_r($index);
+    // echo "\nVals array\n";
+    // print_r($vals);
+
+  //   $curlSession = curl_init();
+  //   curl_setopt($curlSession, CURLOPT_URL, 'https://store.samhsa.gov/api/r/xml/websitelist?terms=Anxiety-Disorders-Phobias');
+  //   curl_setopt($curlSession, CURLOPT_BINARYTRANSFER, true);
+  //   curl_setopt($curlSession, CURLOPT_RETURNTRANSFER, true);
+  //
+  // $xml = json_decode(curl_exec($curlSession));
+  // curl_close($curlSession);
+
+  $url = 'https://store.samhsa.gov/api/r/xml/websitelist?terms=Anxiety-Disorders-Phobias';
+    $xml = simplexml_load_file($url) or die("Can't connect to URL");
+
+    foreach ($xml->channel->item as $item) {
+        printf('<li><a href="%s">%s</a></li>', $item->link, $item->title);
+    }
+
+    $_SESSION['resources'] = $xml;
+
+    $form_state['redirect'] = 'result';
+}
+
+// Display results
+function result() {
+    $resources = $_SESSION['resources'];
+
+    echo "<pre>";
+    print_r($xml);
+    echo "</pre>";
+
+}

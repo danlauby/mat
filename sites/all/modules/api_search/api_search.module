@@ -4,14 +4,14 @@
 function api_search_menu() {
     $items = [];
     $items['api_search'] = [
-        'title' => 'Search',
+        'title' => 'Search for Doctors',
         'page callback' => 'drupal_get_form',
         'page arguments' => ['api_search_form'],
         'access callback' => TRUE,
         'type' => MENU_NORMAL_ITEM,
     ];
     $items['search_results'] = [
-        'title' => 'Results',
+        'title' => 'Doctors',
         'page callback' => 'search_results',
         'access callback' => TRUE,
         'type' => MENU_CALLBACK,
@@ -25,16 +25,14 @@ function api_search_form() {
         '#title' => 'Trigger',
         '#type' => 'textfield',
         '#description' => t('What triggers your anxiety?'),
+        '#required' => TRUE,
+
     ];
     $form['location'] = [
         '#title' => 'Location',
         '#type' => 'textfield',
         '#description' => t('Where are you located?'),
-    ];
-    $form['resources'] = [
-        '#title' => 'Resources',
-        '#type' => 'textfield',
-        '#description' => t('What resources interest you?'),
+        '#required' => TRUE,
     ];
     $form['submit'] = [
         '#type' => 'submit',
@@ -48,7 +46,6 @@ function api_search_form_submit($form, &$form_state) {
 // Save user input
 $trigger = $form_state['values']['trigger'];
 $user_location = $form_state['values']['location'];
-$resources = $form_state['values']['resources'];
 
 
 // -----Health Finder API ------ //
@@ -58,7 +55,7 @@ $health = curl_init();
 // Set curl options
 curl_setopt_array($health, array(
     CURLOPT_RETURNTRANSFER => 1,
-    CURLOPT_URL => "https://healthfinder.gov/api/v2/topicsearch.json?api_key=&Keyword=" . $trigger,
+    CURLOPT_URL => "https://healthfinder.gov/api/v2/topicsearch.json?api_key=cjbntfusnxaqvseu&Keyword=" . $trigger,
     CURLOPT_USERAGENT => 'myanxietytriggers'
 ));
 // Execute curl
@@ -78,7 +75,7 @@ $doctor = curl_init();
 // Set curl options
 curl_setopt_array($doctor, array(
     CURLOPT_RETURNTRANSFER => 1,
-    CURLOPT_URL => 'https://api.betterdoctor.com/2016-03-01/doctors?query=' . $trigger . '&location=' . $user_location . '&skip=0&limit=10&user_key=',
+    CURLOPT_URL => 'https://api.betterdoctor.com/2016-03-01/doctors?query=' . $trigger . '&location=' . $user_location . '&skip=0&limit=10&user_key=77c9fb5fe1a6e67bb9d2a7db435149c1',
     CURLOPT_USERAGENT => 'myanxietytriggers'
 ));
     // Execute curl
@@ -89,6 +86,7 @@ curl_setopt_array($doctor, array(
     }
     // Close curl
     curl_close($doctor);
+
     // Format JSON
     $health_array = json_decode($health_results, true);
     $doctor_array = json_decode($doctor_results, true);
@@ -103,11 +101,11 @@ curl_setopt_array($doctor, array(
 function search_results() {
     $answer = $_SESSION['health_results'];
     $doctor_answer = $_SESSION['doctor_results'];
-
+    $resources = "";
     $doctor_display = "";
     $search_results = $answer['Result']['Resources']['Resource'];
     for($i = 0; $i < sizeof($search_results); $i++) {
-      echo "<h3>" . $search_results[$i]["Title"] . "</h3><br>";
+      $resources .= "<h3>" . $search_results[$i]["Title"] . "</h3><br>";
     }
     for ($j = 0; $j < sizeof($doctor_answer['data']); $j++) {
         $doctor_profile = [];
@@ -119,15 +117,23 @@ function search_results() {
             $img = $doctor_profile[$x]['profile']['image_url'];
             $bio = $doctor_profile[$x]['profile']['bio'];
             // $website = $doctor_profile[$x]['practices'][$x]['website'];
-            $phone = $doctor_profile[$x]['practices'][$x]['phones'][$x]['number'];
+            $phone_number = $doctor_profile[$x]['practices'][$x]['phones'][$x]['number'];
+             $numbers_only =
+            preg_replace("/[^\d]/", "", $phone_number);
+            $phone = preg_replace("/^1?(\d{3})(\d{3})(\d{4})$/", "$1-$2-$3", $numbers_only);
             $city = $doctor_profile[$x]['practices'][$x]['visit_address']['city'];               $state = $doctor_profile[$x]['practices'][$x]['visit_address']['state'];
-            array_push($doctor, $name, $img, $bio, $phone, $city, $state);
+            $doctor_location = $city . ", " . $state;
+
+            array_push($doctor, $name, $img, $bio, $phone, $doctor_location);
 
         }
         for ($z = 0; $z < sizeof($doctor_profile); $z++) {
-            $doctor_display .= "<h2>" . [$name][$z] . "</h2><br><img src='" . [$img][$z] . "'/><br><br>" . [$bio][$z] . "</p>";
+            $doctor_display .= "<div class='doctor-view'><h2>" . [$name][$z] . "</h2><br><img src='" .
+             [$img][$z] . "'/><br><br>" .
+             "<p><strong>" . [$phone][$z] . " - <em>". [$doctor_location][$z] . "</em></strong></p><p>" .
+             [$bio][$z] . "</p></div>";
         }
     }
-    return $doctor_display;
-    // print_r($doctor_profile[0]);
+    return $doctor_display . "<br><h1>Resources:</h1>" . $resources;
+    // print_r($doctor_answer);
 }

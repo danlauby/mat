@@ -1,0 +1,63 @@
+<?php
+
+// Set parameters
+function recommend_menu() {
+    $items['recommend'] = array(
+        'title' => 'Recommend a Doctor!',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('recommend'),
+        'access callback' => TRUE,
+        'type' => MENU_NORMAL_ITEM,
+    );
+    $items['recommendations'] = array(
+        'title' => 'Your Recommendations',
+        'page callback' => 'recommendations',
+        'access callback' => TRUE,
+        'type' => MENU_CALLBACK,
+    );
+    return $items;
+}
+
+
+// Create form
+function recommend() {
+    $form['name'] = array(
+        '#title' => 'Doctor\'s Name:',
+        '#type' => 'textfield',
+        '#description' => t('Enter a doctor\'s name'),
+        '#required' => TRUE,
+    );
+    $form['contact'] = array(
+        '#title' => 'Doctor\'s Phone Number:',
+        '#type' => 'textfield',
+        '#description' => t('Enter a doctor\'s phone number'),
+        '#required' => TRUE,
+    );
+    $form['where'] = array(
+        '#title' => 'Doctor\'s Location:',
+        '#type' => 'textfield',
+        '#description' => t("Ex: Portland, OR"),
+        '#required' => TRUE,
+    );
+    $form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => 'Submit',
+    );
+    return $form;
+}
+
+// Submit form
+function recommend_submit($form, &$form_state) {
+    $_SESSION['name'] = $form_state['values']['name'];
+    $_SESSION['contact'] = $form_state['values']['contact'];
+    $_SESSION['where'] = $form_state['values']['where'];
+    $form_state['redirect'] = 'recommendations';
+}
+
+// Display results
+function recommendations() {
+    $name = $_SESSION['name'];
+    $contact = $_SESSION['contact'];
+    $where = $_SESSION['where'];
+    return "<div class='recommend-doctor'><h2> ". $name . "</h2><br><h3>" . $contact . "</h3><br><h3>" . $where . "</div>";
+}
